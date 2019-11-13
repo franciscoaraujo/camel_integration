@@ -1,0 +1,295 @@
+
+
+%20bndesonline_write
+Obter token com escopo de acesso bndesonline_read bndesonline_write
+Requisição: 
+HTTP METHOD: POST
+URL: https://apigw.bndes.gov.br/token
+HEADER: Authorization: Basic Base64(consumer-key:consumer-secret)
+POST PARAMETER: grant_type=client_credentials
+POST PARAMETER: scope=bndesonline_read bndesonline_write
+
+
+Consumer Key 
+wJXA1FpEUaMlXBxJHvJQfI7maska 
+
+Consumer Secret 
+MtDR8iPFbPb6wW5u35IHp6aJ1f8a 
+ 
+
+Generating Access Tokens 
+The following cURL command shows how to generate an access token using the Password Grant type.
+curl -k -d "grant_type=password&username=Username&password=Password" -H "Authorization: Basic d0pYQTFGcEVVYU1sWEJ4Skh2SlFmSTdtYXNrYTpNdERSOGlQRmJQYjZ3VzV1MzVJSHA2YUoxZjhh" https://apis-gateway-h.bndes.gov.br/token
+curl -k -d "grant_type=password&username=Username&password=Password" -H "Authorization: Basic d0pYQTFGcEVVYU1sWEJ4Skh2SlFmSTdtYXNrYTpNdERSOGlQRmJQYjZ3VzV1MzVJSHA2YUoxZjhh" https://apis-gateway-h.bndes.gov.br/token
+In a similar manner, you can generate an access token using the Client Credential grant type with the following cURL command.
+curl -k -d "grant_type=client_credentials" -H "Authorization: Basic d0pYQTFGcEVVYU1sWEJ4Skh2SlFmSTdtYXNrYTpNdERSOGlQRmJQYjZ3VzV1MzVJSHA2YUoxZjhh" https://apis-gateway-h.bndes.gov.br/token 
+																	d0pYQTFGcEVVYU1sWEJ4Skh2SlFmSTdtYXNrYTpNdERSOGlQRmJQYjZ3VzV1MzVJSHA2YUoxZjhh					
+curl --request GET -url "https://apigw-h.bndes.gov.br/bndesonline/v1/consultaSubcredito/44902001029" --header "accept: application/xml" --header "authorization: Bearer fa7d1d96-81cc-35c1-a671-166c5489aea4"
+
+
+
+
+
+public static Response getToken(String consumerKey, String consumerSecret, String urlToken) throws IOException {
+		
+		OkHttpClient client = new OkHttpClient();
+		StringBuilder joinKey  = new StringBuilder().append(consumerKey).append(":").append(consumerSecret);
+		String encodedString = Base64.getEncoder().encodeToString(joinKey.toString().getBytes());
+		StringBuilder base64Result = new StringBuilder();
+		base64Result.append("Basic ").append(encodedString);
+		System.out.println(base64Result.toString());
+		
+		MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+		RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials");
+		Request request = new Request.Builder()
+				.url(urlToken)
+				.post(body)
+				.addHeader("Content-Type", "application/x-www-form-urlencoded")
+				.addHeader("Authorization", base64Result.toString())
+				//.addHeader("User-Agent", "PostmanRuntime/7.19.0").addHeader("Accept", "*/*")
+				.addHeader("Host", "apis-gateway-h.bndes.gov.br")
+				.addHeader("Accept-Encoding", "gzip, deflate")
+				.addHeader("Content-Length", "29").addHeader("Connection", "keep-alive").build();
+
+		Response response = client.newCall(request).execute();
+		return response;
+		
+	}
+	
+	
+	
+	String urlToken= "https://apis-gateway-h.bndes.gov.br/token";
+		
+		String consumerKey = "wJXA1FpEUaMlXBxJHvJQfI7maska";
+		String consumerSecret = "MtDR8iPFbPb6wW5u35IHp6aJ1f8a";
+		
+		
+		
+		// TODO Auto-generated method stub
+		from("direct:getTokenResponse").routeId("tokenResponse")
+		
+        .setHeader(Exchange.HTTP_METHOD, constant("POST"))
+        .setHeader(Exchange.HTTP_PATH, constant("oauth/token"))
+        //.setHeader("grant_type", constant("client_credentials"))
+        //.setHeader("username", constant("admin"))
+        //.setHeader("password", constant("admin1234"))
+        //.setHeader("client_id", constant("spring-security-oauth2-read-write-client"))
+        .setHeader("Authorization", constant("Basic d0pYQTFGcEVVYU1sWEJ4Skh2SlFmSTdtYXNrYTpNdERSOGlQRmJQYjZ3VzV1MzVJSHA2YUoxZjhh"))
+        .process(new PrepareMultipartFormData("grant_type", "client_credentials"))
+        .to("https://apis-gateway-h.bndes.gov.br/token")
+		.log("------------------------------------>>>>>>> ");
+		
+        /*.process(new Processor() {
+			@Override
+			public void process(Exchange exchange) throws Exception {
+				// TODO Auto-generated method stub
+				 Message in = exchange.getIn();
+				 String msg = in.getBody(String.class);
+				 System.out.println("Response: " + msg);
+	
+			}
+		});*/
+		
+		
+		
+		
+		public class PrepareMultipartFormData implements Processor{
+
+	private String[] multipartHeaders;
+
+    public PrepareMultipartFormData(String... multipartHeaders) {
+        this.multipartHeaders = multipartHeaders;
+    }
+
+    @Override
+    public void process(Exchange exchange) throws Exception {
+        addMultipart(exchange.getIn(), multipartHeaders);
+    }
+
+  
+    private static void addMultipart(Message message, String... multipartKeys) throws Exception{
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        for (String key: multipartKeys) {
+            builder.addTextBody(key, message.getHeader(key, String.class));
+        }
+        HttpEntity resultEntity = builder.build();
+        message.setHeader(Exchange.CONTENT_TYPE, resultEntity.getContentType().getValue());
+        message.setBody(resultEntity.getContent());
+    }
+}
+
+
+<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-servlet-starter</artifactId>
+			<version>${camel-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-spring-boot-starter</artifactId>
+			<version>${camel-version}</version>
+		</dependency>
+		
+
+
+
+
+
+private void configureHttp4() {
+	KeyStoreParameters ksp = new KeyStoreParameters();
+	ksp.setResource("\Projects\example\exampleCa.jks");
+	ksp.setPassword("password");
+	TrustManagersParameters tmp = new TrustManagersParameters();
+	tmp.setKeyStore(ksp);
+	SSLContextParameters scp = new SSLContextParameters();
+	scp.setTrustManagers(tmp);
+	HttpComponent httpComponent = getContext().getComponent("https4", HttpComponent.class);
+	httpComponent.setSslContextParameters(scp);
+}
+
+
+
+
+
+
+package com.rabobank.api;
+
+import com.rabobank.api.routes.TesteTokenRoute;
+import okhttp3.*;
+import org.apache.camel.*;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.http4.HttpComponent;
+import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.main.Main;
+import org.apache.camel.util.jsse.KeyStoreParameters;
+import org.apache.camel.util.jsse.SSLContextParameters;
+import org.apache.camel.util.jsse.TrustManagersParameters;
+import org.apache.http.HttpEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
+
+public class TesteToken {
+
+
+    static int proxyPort = 8080;
+    static String proxyHost = "proxysao.am.rabonet.com";
+
+    public static void main(String args[]) throws Exception {
+
+
+        CamelContext context = new DefaultCamelContext();
+        context.getProperties().put("http.proxyHost", proxyHost);
+        context.getProperties().put("http.proxyPort", "8080");
+        configureHttp4(context);
+
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+
+                StringBuilder joinKey = new StringBuilder().append("wJXA1FpEUaMlXBxJHvJQfI7maska").append(":").append("MtDR8iPFbPb6wW5u35IHp6aJ1f8a");
+                String encodedString = Base64.getEncoder().encodeToString(joinKey.toString().getBytes());
+                StringBuilder base64Result = new StringBuilder();
+                base64Result.append("Basic ").append(encodedString);
+
+                from("direct:getTokenResponse")
+                        .routeId("tokenResponse")
+                        .setHeader(Exchange.HTTP_METHOD, constant("POST"))
+                        .setHeader("Content-Type", constant("application/x-www-form-urlencoded"))
+                        .setHeader("Authorization", constant(base64Result.toString()))
+                        .setHeader("Host", constant("apis-gateway-h.bndes.gov.br"))
+                        .setHeader("Accept-Encoding", constant("gzip, deflate"))
+                        .setHeader("Content-Length", constant("29"))
+                        .setHeader("Connection", constant("keep-alive"))
+                        .setHeader("Authorization", constant("Basic d0pYQTFGcEVVYU1sWEJ4Skh2SlFmSTdtYXNrYTpNdERSOGlQRmJQYjZ3VzV1MzVJSHA2YUoxZjhh"))
+                        .setBody().simple("grant_type = client_credentials")
+
+                        .to("https4://apis-gateway-h.bndes.gov.br/token");
+
+            }
+        });
+        context.start();
+        ProducerTemplate producerTemplate = context.createProducerTemplate();
+        producerTemplate.sendBody("direct:getTokenResponse", "xxx");
+    }
+
+
+    private static void configureHttp4(CamelContext context ) {
+        KeyStoreParameters ksp = new KeyStoreParameters();
+       // ksp.setResource("\Projects\example\exampleCa.jks");
+        //ksp.setPassword("password");
+        TrustManagersParameters tmp = new TrustManagersParameters();
+        tmp.setKeyStore(ksp);
+        SSLContextParameters scp = new SSLContextParameters();
+        scp.setTrustManagers(tmp);
+        HttpComponent httpComponent = context.getComponent("https4", HttpComponent.class);
+        httpComponent.setSslContextParameters(scp);
+    }
+
+
+    public static Response getToken(String consumerKey, String consumerSecret, String urlToken) throws IOException, URISyntaxException {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)))
+                .build();
+
+        StringBuilder joinKey = new StringBuilder().append(consumerKey).append(":").append(consumerSecret);
+        String encodedString = Base64.getEncoder().encodeToString(joinKey.toString().getBytes());
+        StringBuilder base64Result = new StringBuilder();
+        base64Result.append("Basic ").append(encodedString);
+        System.out.println(base64Result.toString());
+
+        MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+        RequestBody body = RequestBody.create(mediaType, "grant_type=client_credentials");
+        Request request = new Request.Builder()
+                .url(urlToken)
+                .post(body)
+                .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                .addHeader("Authorization", base64Result.toString())
+                .addHeader("Host", "apis-gateway-h.bndes.gov.br")
+                .addHeader("Accept-Encoding", "gzip, deflate")
+                .addHeader("Content-Length", "29").addHeader("Connection", "keep-alive").build();
+
+        Response response = client.newCall(request).execute();
+        return response;
+    }
+}
+
+
+class PrepareMultipartFormData implements Processor {
+
+    private String[] multipartHeaders;
+
+    public PrepareMultipartFormData(String... multipartHeaders) {
+        this.multipartHeaders = multipartHeaders;
+    }
+
+    @Override
+    public void process(Exchange exchange) throws Exception {
+        addMultipart(exchange.getIn(), multipartHeaders);
+    }
+
+    private static void addMultipart(Message message, String... multipartKeys) throws Exception {
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        for (String key : multipartKeys) {
+            builder.addTextBody(key, message.getHeader(key, String.class));
+        }
+        HttpEntity resultEntity = builder.build();
+        message.setHeader(Exchange.CONTENT_TYPE, resultEntity.getContentType().getValue());
+        message.setBody(resultEntity.getContent());
+    }
+}
+
+		
+	
+		
