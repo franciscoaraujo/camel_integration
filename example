@@ -290,6 +290,75 @@ class PrepareMultipartFormData implements Processor {
     }
 }
 
+************************Funcionando***********************************
+
+
+package br.com.caelum.camel.routes;
+
+import java.util.Base64;
+
+import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.Message;
+import org.apache.camel.Processor;
+import org.apache.camel.ProducerTemplate;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.impl.DefaultCamelContext;
+
+public class RouteToken {
+
+	public static void main(String args[]) throws Exception {
+		CamelContext context = new DefaultCamelContext();
+		
+//		context.getProperties().put("http.proxyHost", proxyHost);
+//		context.getProperties().put("http.proxyPort", "8080");
+//		configureHttp4(context);
+		
+		context.addRoutes(new RouteBuilder() {
+			
+            @Override
+            public void configure() throws Exception {
+
+                StringBuilder joinKey = new StringBuilder()
+                		.append("wJXA1FpEUaMlXBxJHvJQfI7maska")
+                		.append(":")
+                		.append("MtDR8iPFbPb6wW5u35IHp6aJ1f8a");
+                String encodedString = Base64.getEncoder().encodeToString(joinKey.toString().getBytes());
+                StringBuilder base64Result = new StringBuilder();
+                base64Result.append("Basic ").append(encodedString);
+                
+                from("direct:getTokenResponse")
+                        .routeId("tokenResponse")
+                        .setHeader(Exchange.HTTP_METHOD, constant("POST"))
+                        .setHeader("Content-Type", constant("application/x-www-form-urlencoded"))
+                        .setHeader("Authorization", constant(base64Result.toString()))
+                        .setHeader("Host", constant("apis-gateway-h.bndes.gov.br"))
+                        .setHeader("Accept-Encoding", constant("gzip, deflate"))
+                        .setHeader("Content-Length", constant("29"))
+                        .setHeader("Connection", constant("keep-alive"))
+                        .setBody().simple("grant_type=client_credentials")
+                        .to("https4://apis-gateway-h.bndes.gov.br/token")
+                        .process(new Processor() {
+                        	@Override
+							public void process(Exchange exchange) throws Exception {
+								// TODO Auto-generated method stub
+								Message in = exchange.getIn();
+								String msg = in.getBody(String.class);
+				                System.out.println("Response: " + msg);
+							}
+                        	
+                        })
+                        ;
+
+            }
+        });
+        context.start();
+        ProducerTemplate producerTemplate = context.createProducerTemplate();
+        producerTemplate.sendBody("direct:getTokenResponse", "xxx");
+
+	}
+}
+
 		
 	
 		
